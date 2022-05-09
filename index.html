@@ -26,10 +26,10 @@
       }
 
       const socket = io();
-      socket.on("connected", () => msg("Socket connected. "));
+      socket.on("connected", () => msg("Socket connected. " + socket.io.engine.transport.name));
 
       socket.on("identify", () => {
-        msg("Identifier request ok...");
+        msg("Identifier request ok");
         socket.emit("controller");
         socket.emit("instances");
         // Sync instances list
@@ -42,7 +42,7 @@
         }, 3 * 1000);
 
         socket.on("loopback", (start) => {
-          document.getElementById("ping").innerText = "Ping: " + (Date.now() - start) + "ms";
+          document.getElementById("ping").innerText = "Ping: " + (Date.now() - start) + "ms (" + socket.io.engine.transport.name + ")";
         });
       });
 

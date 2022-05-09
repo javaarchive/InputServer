@@ -29,6 +29,7 @@ io.on('connection', (socket) => {
     socket.emit("instanceList", instances);
   });
 
+
   socket.on("input", (inst, key, state) => {
     if(!instances.includes(inst)) return;
     if(typeof state != "boolean") return;
