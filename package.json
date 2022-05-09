@@ -1,10 +1,10 @@
 {
-  "name": "socket-chat-example",
+  "name": "input-server",
   "version": "0.0.1",
-  "description": "my first socket.io app",
+  "description": "remote input sending server",
   "dependencies": {
     "express": "^4.17.1",
-    "socket.io": "^4.1.2"
+    "socket.io": "^4.5.0"
   },
   "scripts": {
     "start": "node index.js"
