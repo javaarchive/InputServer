@@ -23,6 +23,7 @@ io.on('connection', (socket) => {
   socket.emit("identify",Date.now());
   socket.emit("hello","world",10);
   
+  socket.on("loopback", (c) => socket.emit("loopback",c));
 
   socket.on("instances", () => {
     socket.emit("instanceList", instances);

@@ -12,15 +12,38 @@
     
     <script src="/socket.io/socket.io.js"></script>
 
+    <h1 id="status">Input-Server Loading</h1>
+
     Select Instance:
     <select value="alpha" id="sel"></select>
 
+    <br />
+    <span id="ping">Loading ping...</span>
+
     <script>
-      var socket = io();
+      function msg(message){
+        document.getElementById("status").innerText = message;
+      }
+
+      const socket = io();
+      socket.on("connected", () => msg("Socket connected. "));
 
       socket.on("identify", () => {
+        msg("Identifier request ok...");
         socket.emit("controller");
         socket.emit("instances");
+        // Sync instances list
+        setInterval(() => {
+          socket.emit("instances");
+        }, 10 * 1000);
+        setInterval(() => {
+          console.log("Sent ping command");
+          socket.emit("loopback", Date.now());
+        }, 3 * 1000);
+
+        socket.on("loopback", (start) => {
+          document.getElementById("ping").innerText = "Ping: " + (Date.now() - start) + "ms";
+        });
       });
 
       socket.on("instanceList", (instances) => {
