@@ -19,6 +19,9 @@
 
     <br />
     <span id="ping">Loading ping...</span>
+    <button class="action" data-action="toggleBorderless">Toggle borderless window</button>
+    <button class="action" data-action="toggleNativeInputBlock">Native input blocking</button>
+    <button class="action" data-action="resetInput">Reset inputs</button>
 
     <script>
       function msg(message){
@@ -43,6 +46,12 @@
 
         socket.on("loopback", (start) => {
           document.getElementById("ping").innerText = "Ping: " + (Date.now() - start) + "ms (" + socket.io.engine.transport.name + ")";
+        });
+
+        document.getElementsByClassName("action").forEach(element => {
+          element.addEventListener("click", () => {
+            socket.emit(element.getAttribute("data-action"),document.getElementById("sel").value);
+          });
         });
       });
 

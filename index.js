@@ -37,7 +37,13 @@ io.on('connection', (socket) => {
     instanceToSocket[inst].emit("key", state?key:-key);
   });
   
-
+  const forwards = ["toggleBorderless","toggleNativeInputBlock","resetInput"];
+  forwards.forEach(ev => {
+    socket.on(ev, (inst) => {
+      if(!instances.includes(inst)) return;
+      instanceToSocket[inst].emit(ev, Date.now().toString());
+    });
+  })
 });
 
 http.listen(port,"0.0.0.0", () => {
