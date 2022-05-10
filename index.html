@@ -36,9 +36,9 @@
         socket.emit("controller");
         socket.emit("instances");
         // Sync instances list
-        setInterval(() => {
+        /*setInterval(() => {
           socket.emit("instances");
-        }, 10 * 1000);
+        }, 10 * 1000);*/
         setInterval(() => {
           console.log("Sent ping command");
           socket.emit("loopback", Date.now());
