@@ -48,7 +48,7 @@
           document.getElementById("ping").innerText = "Ping: " + (Date.now() - start) + "ms (" + socket.io.engine.transport.name + ")";
         });
 
-        document.getElementsByClassName("action").forEach(element => {
+        Array.from(document.getElementsByClassName("action")).forEach(element => {
           element.addEventListener("click", () => {
             socket.emit(element.getAttribute("data-action"),document.getElementById("sel").value);
           });
