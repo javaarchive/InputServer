@@ -57,6 +57,7 @@
 
       socket.on("instanceList", (instances) => {
         let select = document.getElementById("sel");
+        select.innerHTML = ""
         instances.forEach((instanceName) => {
           select.appendChild(new Option(instanceName,instanceName));
         });
@@ -69,7 +70,7 @@
       });
 
       document.addEventListener('keyup', (event) => {
-        if (event.key === "Escape") { e.keyCode = 27; }
+        if (event.key === "Escape") { event.keyCode = 27; }
         console.log("Key code",event.key,event.keyCode,"up");
         socket.emit("input",document.getElementById("sel").value,event.keyCode,false);
       });
