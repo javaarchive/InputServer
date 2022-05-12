@@ -37,7 +37,7 @@ io.on('connection', (socket) => {
     instanceToSocket[inst].emit("key", state?key:-key);
   });
   
-  const forwards = ["toggleBorderless","toggleNativeInputBlock","resetInput"];
+  const forwards = ["toggleBorderless","toggleNativeInputBlock","toggleNativeGamepadBlock","resetInput"];
   forwards.forEach(ev => {
     socket.on(ev, (inst) => {
       if(!instances.includes(inst)) return;
