@@ -111,7 +111,8 @@
             }).catch(ex => {
               alert("Fetch Error " + ex);
             });
-
+            
+            let peerConnects = 0;
             peer.on("connection", (conn) => {
               conn.send({
                 event: "hello"
@@ -130,9 +131,13 @@
                   });
                 }else if(data.event == "fwd"){
                   // FORWARD!
+                  console.log("Forward",data.args);
                   socket.emit(...data.args);
                 }
               });
+
+              peerConnects ++;
+              advStatus(peerConnects + " connects total");
             })
 
             }else if(role == "relay_sender"){
@@ -159,7 +164,7 @@
                     });
 
                     conn.on("data", (data) => {
-                      if(data.event == "instances"){
+                      if(data.event == "instanceList"){
                         onInstanceList(data.data);
                       }else if(data.event == "ping"){
                         advStatus("Direct Ping: " + (Date.now() - data.time) + "ms");
