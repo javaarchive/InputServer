@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/dark.css">
   </head>
   <body>
-    
+    <script src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
 
     <h1 id="status">Input-Server Loading</h1>
@@ -26,11 +26,38 @@
     <button class="action" data-action="resetInput">Reset keyboard inputs</button>
 
     <script>
+      let savedInstances = [];
+
       function msg(message){
         document.getElementById("status").innerText = message;
       }
 
-      const socket = io();
+      function advStatus(message){
+        document.getElementById("advanced-status").innerText = message;
+      }
+
+      function displayID(pid){
+        document.getElementById("p2p-id").innerText = "Peer ID: " + pid;
+      }
+
+      function onInstanceList(instances) {
+        let select = document.getElementById("sel");
+        let backupVal = select.value || "";
+        select.innerHTML = ""
+        instances.forEach((instanceName) => {
+          select.appendChild(new Option(instanceName,instanceName));
+        });
+        select.value = backupVal;
+        savedInstances = instances;
+      }
+
+      const usp = new URLSearchParams(location.search);
+      const uri = usp.get("uri");
+      const socket = usp?io(uri):io();
+
+      var firstLaunch = true;
+      let peerConn = null;
+
       socket.on("connected", () => msg("Socket connected. " + socket.io.engine.transport.name));
 
       socket.on("identify", () => {
@@ -55,28 +82,128 @@
             socket.emit(element.getAttribute("data-action"),document.getElementById("sel").value);
           });
         });
+        let role = usp.get("role");
+
+        if(role && firstLaunch){
+          firstLaunch = false;
+          const peer = new Peer();
+          advStatus("Initalized Peer");
+          peer.on("open", (id) => {
+            displayID(id);
+            advStatus("Obtained Peer ID");
+            socket.emit("peer_created", id);
+
+            if(role == "relay_reciever"){
+            advStatus("0 connected");
+
+            socket.emit("setMasterPeerLocal",localStorage.getItem("authkey"),peer.id);
+
+            fetch("/set_master_peer/" + peer.id, {
+              headers: {
+                authorization: localStorage.getItem("authkey")
+              }
+            }).then((resp) => {
+              if(resp.status == 200){
+                advStatus("Master Peer Status set!");
+              }else{
+                advStatus("Master Peer Status set failed! Code: " + resp.status);
+              }
+            }).catch(ex => {
+              alert("Fetch Error " + ex);
+            });
+
+            peer.on("connection", (conn) => {
+              conn.send({
+                event: "hello"
+              });
+
+              conn.on("data", (data) => {
+                if(data.event == "ping"){
+                  conn.send({
+                    event: "ping",
+                    time: data.time
+                  });
+                }else if(data.event == "instances"){
+                  conn.send({
+                    event: "instanceList",
+                    data: savedInstances
+                  });
+                }else if(data.event == "fwd"){
+                  // FORWARD!
+                  socket.emit(...data.args);
+                }
+              });
+            })
+
+            }else if(role == "relay_sender"){
+              fetch("/get_master_peer").then(resp => {
+                if(resp.status == 200){
+                  resp.json().then(data => {
+                    advStatus("Got master peer ID " + data.peerID);
+                    let conn = peer.connect(data.peerID);
+                    conn.on("open", () => {
+                      advStatus("Connected to master peer!");
+                      peerConn = conn;
+                      conn.send({
+                        event: "hello"
+                      });
+                      conn.send({
+                        event: "instances"
+                      });
+                      setInterval(() => {
+                        conn.send({
+                          event: "ping",
+                          time: Date.now()
+                        });
+                      }, 3 * 1000);
+                    });
+
+                    conn.on("data", (data) => {
+                      if(data.event == "instances"){
+                        onInstanceList(data.data);
+                      }else if(data.event == "ping"){
+                        advStatus("Direct Ping: " + (Date.now() - data.time) + "ms");
+                      }
+                    });
+                  });
+                }else{
+                  alert("Fetch Error " + resp.status);
+                }
+              }).catch(ex => {
+                alert("Fetch Errror " + ex);
+              })
+            }
+          });
+          
+        }
       });
 
-      socket.on("instanceList", (instances) => {
-        let select = document.getElementById("sel");
-        select.innerHTML = ""
-        instances.forEach((instanceName) => {
-          select.appendChild(new Option(instanceName,instanceName));
-        });
-      });
+      socket.on("instanceList", onInstanceList);
 
       document.addEventListener('keydown', (event) => {
         if (event.key === "Escape") { event.keyCode = 27; }
         console.log("Key code",event.key,event.keyCode,"down");
-        socket.emit("input",document.getElementById("sel").value,event.keyCode,true);
+        let payload = ["input",document.getElementById("sel").value,event.keyCode,true];
+        socket.emit(...payload);
+        peerConn.send({
+          event: "fwd",
+          args: payload
+        });
       });
 
       document.addEventListener('keyup', (event) => {
         if (event.key === "Escape") { event.keyCode = 27; }
         console.log("Key code",event.key,event.keyCode,"up");
-        socket.emit("input",document.getElementById("sel").value,event.keyCode,false);
+        let payload = ["input",document.getElementById("sel").value,event.keyCode,false];
+        socket.emit(...payload);
+        peerConn.send({
+          event: "fwd",
+          args: payload
+        });
       });
 
     </script>
+    <div id="advanced-status"></div>
+    <div id="p2p-id"></div>
   </body>
 </html>

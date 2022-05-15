@@ -4,6 +4,7 @@ const io = require('socket.io')(http,{
   allowEIO3: true
 });
 const port = process.env.PORT || 8181;
+const config = require('./config');
 
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
@@ -11,6 +12,25 @@ app.get('/', (req, res) => {
 
 let instances = [];
 let instanceToSocket = {};
+
+let masterPeer = {};
+
+app.get("/get_master_peer", (req, res) => {
+  res.send(masterPeer);
+});
+
+app.get("/set_master_peer/:pid", (req, res) => {
+  if(req.get("authorization") === config.authkey){
+    masterPeer = {
+      peerID: req.params.pid,
+      setTime: Date.now()
+    };
+    console.log("master peer set success",req.params.pid);
+  }else{
+    console.log("master peer set fail",req.params.pid);
+  }
+  res.send(masterPeer);
+});
 
 io.on('connection', (socket) => {
   console.log("New connection",socket.id);
@@ -29,6 +49,16 @@ io.on('connection', (socket) => {
     socket.emit("instanceList", instances);
   });
 
+  socket.on("setMasterPeerLocal", (authkey, peerID) => {
+    if(authkey === config.authkey){
+      masterPeer = {
+        peerID: peerID,
+        setTime: Date.now()
+      };
+      console.log("master peer set success through socket",peerID);
+    }
+  });
+
 
   socket.on("input", (inst, key, state) => {
     if(!instances.includes(inst)) return;
@@ -43,7 +73,7 @@ io.on('connection', (socket) => {
       if(!instances.includes(inst)) return;
       instanceToSocket[inst].emit(ev, Date.now().toString());
     });
-  })
+  });
 });
 
 http.listen(port,"0.0.0.0", () => {
