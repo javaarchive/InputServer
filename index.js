@@ -1,7 +1,10 @@
 const app = require('express')();
 const http = require('http').Server(app);
 const io = require('socket.io')(http,{
-  allowEIO3: true
+  allowEIO3: true,
+  cors: {
+    origin: '*',
+  }
 });
 const port = process.env.PORT || 8181;
 const config = require('./config');
