@@ -80,6 +80,12 @@
         Array.from(document.getElementsByClassName("action")).forEach(element => {
           element.addEventListener("click", () => {
             socket.emit(element.getAttribute("data-action"),document.getElementById("sel").value);
+            if(peerConn){
+              peerConn.send({
+                event: "fwd",
+                args: [element.getAttribute("data-action"),document.getElementById("sel").value]
+              });
+            }
           });
         });
         let role = usp.get("role");
