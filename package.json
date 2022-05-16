@@ -8,5 +8,14 @@
   },
   "scripts": {
     "start": "node index.js"
-  }
+  },
+  "pkg": {
+    "scripts": "*.js",
+    "assets":[
+      "*.html"
+    ],
+    "targets": [ "node14-linux","node14-macos","node14-win","node16-win" ],
+    "outputPath": "dist"
+  },
+  "bin": "index.js"
 }

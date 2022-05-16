@@ -92,7 +92,9 @@
 
         if(role && firstLaunch){
           firstLaunch = false;
-          const peer = new Peer();
+          const peer = new Peer({
+            debug: 2
+          });
           advStatus("Initalized Peer");
           peer.on("open", (id) => {
             displayID(id);
