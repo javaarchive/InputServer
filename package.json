@@ -11,10 +11,14 @@
   },
   "pkg": {
     "scripts": "*.js",
-    "assets":[
+    "assets": [
       "*.html"
     ],
-    "targets": [ "node14-linux","node14-macos","node14-win","node16-win" ],
+    "targets": [
+      "node12-linux",
+      "node12-macos",
+      "node12-win",
+    ],
     "outputPath": "dist"
   },
   "bin": "index.js"
