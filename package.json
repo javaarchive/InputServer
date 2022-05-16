@@ -17,7 +17,7 @@
     "targets": [
       "node12-linux",
       "node12-macos",
-      "node12-win",
+      "node12-win"
     ],
     "outputPath": "dist"
   },
